@@ -40,7 +40,8 @@
                 <i class="el-icon-office-building"></i>
                 上传附件
               </template>
-              暂未开放
+              <input type="file" @change="upload_file"/>
+              <el-button v-if="file_url!=''" style="margin: 6px;" @click="download_file"  type="primary" icon="el-icon-file">下载已上传文件：{{ file_name }}</el-button>
             </el-descriptions-item>
             <el-descriptions-item>
               <template slot="label">
@@ -139,6 +140,36 @@
 <script>
 import {getRequest, postRequest} from "@/utils/api";
 import 'mavon-editor/dist/css/index.css'
+import COS from 'cos-js-sdk-v5';
+
+let cos = new COS({
+    // getAuthorization 必选参数
+    getAuthorization: function (options, callback) {
+        // 初始化时不会调用，只有调用 cos 方法（例如 cos.putObject）时才会进入
+        // 异步获取临时密钥
+        // 服务端 JS 和 PHP 例子：https://github.com/tencentyun/cos-js-sdk-v5/blob/master/server/
+        // 服务端其他语言参考 COS STS SDK ：https://github.com/tencentyun/qcloud-cos-sts-sdk
+        // STS 详细文档指引看：https://cloud.tencent.com/document/product/436/14048
+        postRequest("/auth_files").then((res)=>{
+          if(res.data){
+            let data = res.data.data
+            console.log(data)
+            callback({
+              TmpSecretId: data.credentials.tmpSecretId,
+              TmpSecretKey: data.credentials.tmpSecretKey,
+              SecurityToken: data.credentials.sessionToken,
+              // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+              StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+              ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000000
+          });
+          }
+        })
+
+    }
+});
+
+
+
 
 const mdEditor = require('mavon-editor')
 
@@ -156,6 +187,8 @@ export default {
       contestId: '',
       name: '',
       contest_text:"",
+      file_name:"",
+      file_url:"",
       groupName: '',
       activities: [{
         content: '报名开始',
@@ -207,14 +240,74 @@ export default {
           this[name] = value
         })
     },
-    update_info(){
-      postRequest("/update_score_info",{user_id:this.$store.state.uid,contest_id:this.$route.params.contestId,info:{team_name:this.team_name,art_name:this.art_name,art_desc:this.art_desc,members:this.members}}).then((res) => {
-          if (res.data.status) {
-            console.log(this.conte)
-            this.$message.success("更新信息成功！")
+    upload_file_i(file){
+      cos.uploadFile({
+            Bucket: 'contests-plat-1259460701', /* 填写自己的 bucket，必须字段 */
+            Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
+            Key: 'files/'+this.$route.params.contestId+"/"+this.$store.state.uid+".file",              /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */
+            Body: file, // 上传文件对象
+            onProgress: function(progressData) {
+                console.log(JSON.stringify(progressData));
+            }
+        }, (err, data)=> {
+            if (err) {
+              this.$message.error('上传失败', err);
             } else {
-              this.btnHidden = true;
-              this.btnText = '立即报名';
+              this.file_url = 'files/'+this.$route.params.contestId+"/"+this.$store.state.uid+".file";
+              this.file_name = file.name;
+              this.$message.success('上传成功');
+            }
+        });
+    },
+    upload_file(input){
+      if(input.target.files && input.target.files.length>0){
+          const files = input.target.files
+          console.log(files)
+          if (!files) {
+            return;
+          }
+          const file = files[0];
+          if (!file) {
+            return;
+          }
+          if(this.file_url!=""){
+            cos.deleteObject({
+              Bucket: 'contests-plat-1259460701', /* 填写自己的 bucket，必须字段 */
+              Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
+              Key: 'files/'+this.$route.params.contestId+"/"+this.$store.state.uid+".file",      
+          }, (err, data)=> {
+            if (err) {
+              this.$message.error('删除原有文件失败', err);
+            } else {
+              this.upload_file_i(file)
+            }
+            });
+          }else{
+            this.upload_file_i(file)
+          }
+
+
+      }
+    },
+    download_file(){
+      cos.getObjectUrl({
+              Bucket: 'contests-plat-1259460701', /* 填写自己的 bucket，必须字段 */
+              Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
+              Key: 'files/'+this.$route.params.contestId+"/"+this.$store.state.uid+".file",    
+      }, (err, data)=> {
+          if (err) return console.log(err);
+          var downloadUrl = data.Url + (data.Url.indexOf('?') > -1 ? '&' : '?') + 'response-content-disposition=attachment';
+           downloadUrl += ';filename='+this.file_name; 
+          window.open(downloadUrl);
+      });
+
+    },
+    update_info(){
+      postRequest("/update_score_info",{user_id:this.$store.state.uid,contest_id:this.$route.params.contestId,info:{team_name:this.team_name,art_name:this.art_name,art_desc:this.art_desc,members:this.members,file_name:this.file_name,file_url:this.file_url}}).then((res) => {
+          if (res.data.status) {
+              this.$message.success("更新信息成功！")
+            } else {
+              this.$message.error(res.data.msg)
             }
         });
     },
@@ -239,6 +332,8 @@ export default {
               this.art_name = this.score["art_name"];
               this.art_desc = this.score["art_desc"];
               this.members = this.score["members"];
+              this.file_name = this.score["file_name"];
+              this.file_url = this.score["file_url"];
             } else {
               this.btnHidden = true;
               this.btnText = '立即报名';
@@ -274,10 +369,12 @@ export default {
      */
     submit() {
       postRequest("/add_score" ,{user_id:this.$store.state.uid,contest_id:this.contestId}).then((resp) => {
+
         if (resp.data.status) {
           this.$message.success("报名成功。")
           this.btnText = '已报名';
           this.btnHidden = false;
+          this.contestLoading();
         } else {
           this.$message.error("报名失败！")
         }
