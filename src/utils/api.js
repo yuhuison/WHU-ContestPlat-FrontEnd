@@ -1,8 +1,8 @@
-import axios from 'axios'
+﻿import axios from 'axios'
 import {Message} from "element-ui";
 
 // 请求后端接口的前缀
-let base = 'http://127.0.0.1:40719';
+let base = 'http://154.92.16.121:40719';
 
 //请求拦截
 axios.interceptors.request.use(config => {

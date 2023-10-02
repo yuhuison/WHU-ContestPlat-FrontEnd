@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vue-cli-service serve",
-    "serve": "SET NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve --open",
+    "serve": "SET NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve --open  --host 154.92.16.121",
     "build": "SET NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service build",
     "lint": "SET NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service lint"
   },
