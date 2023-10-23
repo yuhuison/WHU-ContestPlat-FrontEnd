@@ -5,7 +5,7 @@
         <span style="line-height: 28px;font-size: 20px">已评审的比赛</span>
       </div>
       <div v-for="item in contests" :key="item.scoresId" class="text item">
-        <el-link @click="$router.push({name:'find-score',params: {scoresId:item.scoresId}})">{{ item.contestTitle }}
+        <el-link @click="$router.push({name:'find-score',params: {scoresId:item._id}})">{{ item.contest_title }}
         </el-link>
       </div>
       <div v-if="contests.length===0 && contestsUnfinished.length===0" class="text item">
@@ -17,7 +17,7 @@
         <span style="line-height: 28px;font-size: 20px">未评审的比赛</span>
       </div>
       <div v-for="item in contestsUnfinished" class="text item">
-        <el-link @click="$message.info('该比赛还未进行评审！')">{{ item.contestTitle }}</el-link>
+        <el-link @click="$router.push({name:'find-score',params: {scoresId:item._id}})">{{ item.contest_title }}</el-link>
       </div>
       <div v-if="contests.length===0 && contestsUnfinished.length===0" class="text item">
         <el-link>您还没有报名任何比赛哦</el-link>

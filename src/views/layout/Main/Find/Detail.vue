@@ -246,8 +246,10 @@ export default {
             Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
             Key: 'files/'+this.$route.params.contestId+"/"+this.$store.state.uid+".file",              /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */
             Body: file, // 上传文件对象
-            onProgress: function(progressData) {
-                console.log(JSON.stringify(progressData));
+            SliceSize: 1024 * 1024 * 5,     
+            onProgress: (progressData)=> {
+              this.$message.info('上传中。。。上传进度：'+progressData.percent*100 + "%");
+              console.log(JSON.stringify(progressData));
             }
         }, (err, data)=> {
             if (err) {
@@ -315,7 +317,7 @@ export default {
       rows.splice(index, 1);
     },
     on_add_member(){
-      this.members.push(this.form_add)
+      this.members.push({name:this.form_add.name,school:this.form_add.school,code:this.form_add.code})
     },
     // 初始化
     contestLoading() {

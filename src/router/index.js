@@ -98,7 +98,7 @@ const router = new VueRouter({
                 name: 'manage-review',
                 path: 'review',
                 meta: {
-                    title: '发送消息'
+                    title: '查看报名信息'
                 },
                 component: () => import('@/views/layout/Main/Manage/Review')
             }, {

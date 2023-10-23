@@ -34,13 +34,13 @@ export default {
   },
   mounted() {
     if (this.$store.state.isAdmin){
-      this.$router.push("/admin");
+      //this.$router.push("/admin");
     }
   },
   watch:{
     "$store.state.isAdmin"() {
       if (this.$store.state.isAdmin){
-        this.$router.push("/admin");
+        //this.$router.push("/admin");
       }
     }
   }

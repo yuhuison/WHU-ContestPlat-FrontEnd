@@ -5,13 +5,12 @@
         <el-card>
           <div slot="header" class="clearfix">
             <span style="line-height: 28px;font-size: 20px">比赛列表</span>
-            <el-button @click="$router.push('/manage/contest')" type="primary" round style="float: right;"
+            <el-button @click="$message.error('该功能暂未实现')" type="primary" round style="float: right;"
                        size="mini">添加比赛
             </el-button>
           </div>
-          <el-table :data="contests" fit :current-row-key="contests.contestId">
-            <el-table-column prop="contestTitle" label="比赛名称" align="center"></el-table-column>
-            <el-table-column prop="name" label="发布人" width="150%" align="center"></el-table-column>
+          <el-table :data="contests">
+            <el-table-column prop="contest_title" label="比赛名称" align="center"></el-table-column>
             <!--审核状态-->
             <el-table-column prop="status" label="审核状态" width="150%" align="center">
               <template v-slot="scope">
@@ -24,41 +23,28 @@
               </template>
             </el-table-column>
             <!--报名人数-->
-            <el-table-column prop="number" label="报名人数" width="100%" align="center"></el-table-column>
 
             <!--操作-->
-            <el-table-column label="操作" width="150%" align="center">
+            <el-table-column label="操作" width="350%" align="center">
               <template v-slot="scope">
                 <el-button type="text" size="mini" v-if="scope.row.status"
+                           @click="reviewScores(scope.row['_id']['$oid'],scope.row['contest_title'])">
+                  查看报名信息
+                </el-button>
+                <el-button type="text" size="mini" v-if="false"
                            @click="dialogVisible=true;cid=scope.row.contestId">
-                  发送消息
+                  发送公告通知
                 </el-button>
                 <el-button type="text" size="mini" v-if="scope.row.status || scope.row.statusText"
-                           @click="updateContests(scope.row.contestId)">修改比赛
+                           @click="updateContests(scope.row['_id']['$oid'])">修改比赛
                 </el-button>
               </template>
             </el-table-column>
-            <!--评审-->
-            <el-table-column label="评审" width="110%" align="center">
-              <template v-slot="scope">
-                <el-popover v-if="!scope.row.status" placement="top-start" trigger="hover" content="审核未完成">
-                  <el-button slot="reference" type="info" size="mini" round>禁用</el-button>
-                </el-popover>
 
-                <el-button v-else-if="new Date() > new Date(scope.row.regEndTime)" type="success" size="mini" round
-                           @click="sendMessage(scope.row.contestId)">评审
-                </el-button>
-
-                <el-popover v-else placement="top-start" trigger="hover" content="报名未结束，不可评审">
-                  <el-button slot="reference" type="warning" size="mini" round>禁用</el-button>
-                </el-popover>
-
-              </template>
-            </el-table-column>
             <!--删除-->
             <el-table-column label="删除" width="110%" align="center">
               <template v-slot="scope">
-                <el-popconfirm title="这是一段内容确定删除吗？"
+                <el-popconfirm title="确定删除该比赛吗？"
                                @confirm="removeContest(scope.row.contestId,scope.row.contestTitle)">
                   <el-button slot="reference" type="danger" size="mini" round>删除</el-button>
                 </el-popconfirm>
@@ -127,32 +113,25 @@ export default {
       }
     },
     contestsLoading() {
-      getRequest("/contests/gid", {gid: this.$store.state.gid}).then(res => {
+      postRequest("/get_contest_by_index", {start: 0,end:0}).then(res => {
         // console.log(res)
         if (res) {
-          this.contests = res.data.data;
+          this.contests = res.data.contests;
+          console.log(this.contests)
         }
       });
     },
     // 传入比赛id查询评审的学生
-    sendMessage(cid, title) {
-      this.$router.push({name: 'manage-review', params: {contestId: cid, contestTitle: title}});
+    reviewScores(cid,title) {
+      this.$router.push({name: 'manage-review', params: {contest_id: cid,contest_title:title}});
     },
     // 更新比赛
     updateContests(cid) {
-      this.$router.push({name: 'manage-contest', params: {contestId: cid}});
+      this.$router.push({name: 'manage-contest', params: {contest_id: cid}});
     },
     // 删除比赛
     removeContest(id) {
-      deleteRequest("/deleteContest/" + id).then(res => {
-        // console.log(res.data);
-        if (res.data.status) {
-          this.$message.success("删除成功。")
-        } else {
-          this.$message.error("删除失败！")
-        }
-        this.contestsLoading();
-      })
+      this.$message.error("删除失败！目前尚未支持该操作！")
       this.visible = false;
     },
     // 发送消息

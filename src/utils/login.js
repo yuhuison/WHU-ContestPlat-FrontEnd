@@ -6,13 +6,14 @@ export function getUser() {
     if (localStorage.token) {
         getRequest("/current_user").then(res=>{
             // console.log(res);
-            let data = res.data.user;
+            let data = res.data;
             console.log(data)
             if (data){
-                store.state.uid = data._id["$oid"];
-                store.state.name = data.name;
-                store.state.gid = data.group_id;
-                store.state.isAdmin = (data.group_id == "650c3b5d96974a84990eb2c1");
+                store.state.uid = data.user._id["$oid"];
+                store.state.name = data.user.name;
+                store.state.gid = data.user.group_id;
+                console.log("current_user",data)
+                store.state.isAdmin = (data.user_group_order == 0);
             }
         })
         return true;

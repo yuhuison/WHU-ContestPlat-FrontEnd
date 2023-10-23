@@ -56,8 +56,7 @@
           <!-- 选择用户身份 -->
           <el-select placeholder="请选身份" :disabled="selectDisabled" style="width: 100%;margin: 20px auto 30px auto"
                      v-model="selectIdentity">
-            <el-option key="1" label="学生" :value="1" @click.native="student"></el-option>
-            <el-option key="2" label="老师" :value="2" @click.native="teacher"></el-option>
+            <el-option key="1" label="普通用户（学生/老师）" :value="1" @click.native="student"></el-option>
           </el-select>
         </el-tab-pane>
       </el-tabs>

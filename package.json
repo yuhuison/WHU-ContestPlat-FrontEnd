@@ -14,12 +14,14 @@
     "core-js": "^3.6.5",
     "cos-js-sdk-v5": "^1.4.20",
     "element-ui": "^2.15.12",
+    "file-saver": "^2.0.5",
     "js-md5": "^0.7.3",
     "less-loader": "^11.1.0",
     "mavon-editor": "^2.10.4",
     "vue": "^2.6.14",
     "vue-router": "^3.2.0",
-    "vuex": "^3.4.0"
+    "vuex": "^3.4.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^5.0.8",

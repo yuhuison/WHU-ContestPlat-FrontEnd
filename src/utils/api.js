@@ -2,7 +2,7 @@
 import {Message} from "element-ui";
 
 // 请求后端接口的前缀
-let base = 'http://154.92.16.121:40719';
+let base = 'http://154.92.16.121:8000';
 
 //请求拦截
 axios.interceptors.request.use(config => {

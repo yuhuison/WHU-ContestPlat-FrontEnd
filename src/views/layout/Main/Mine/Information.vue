@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import {getRequest, putRequest} from "@/utils/api";
+import {getRequest, putRequest,postRequest} from "@/utils/api";
 
 export default {
   name: "information",
@@ -60,15 +60,15 @@ export default {
   mounted() {
     const uid = this.fromData.userId = this.$store.state.uid;
     getRequest("/current_user").then((res) => {
-      const data = res.data.user;
+      const data = res.data;
       if (data) {
-        this.fromData.name = data.name;
+        this.fromData.name = data.user.name;
         data.sex ? this.sex = '男' : this.sex = '女';
-        this.fromData.school = data.school;
-        this.fromData.address = data.address;
-        this.phone = data.phone;
-        this.email = data.email;
-        this.groupName = data.group_name;
+        this.fromData.school = data.user.school;
+        this.fromData.address = data.user.address;
+        this.phone = data.user.phone;
+        this.email = data.user.email;
+        this.groupName = data.user_group_order == 0 ? "管理员组" : (data.user_group_order == 1 ? "老师组":"学生组" )
       }
     });
   },
@@ -80,21 +80,24 @@ export default {
       if (this.fromData.name.trim() === ''  || this.fromData.address.trim() === '' || this.fromData.school.trim() === '') {
         this.$message.error("不允许为空");
       } else {
-        putRequest("/user/update", this.fromData).then((res) => {
-          if (res.data.status) {
-            this.$message.success("修改成功");
-            this.inputDisabled = true;
-          } else {
-            this.$message.error("修改失败");
-          }
-        });
+        this.$message.error("修改功能正在开发中");
       }
     },
     cancel() {
       this.inputDisabled = true;
     },
     upDateGroup() {
-      alert("修改用户组");
+      this.$prompt('请输入用户组标识码', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+        }).then(({ value }) => {
+          postRequest("/update_user_group",{group_id:value}).then((res)=>{
+            const data = res.data;
+            if (data) {
+              this.$message.info(data.msg);
+            }
+          })
+        })
     }
   }
 }

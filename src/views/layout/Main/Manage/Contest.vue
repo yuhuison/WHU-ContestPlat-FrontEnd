@@ -6,8 +6,8 @@
       <el-row :gutter="20">
         <el-col :span="16" :offset="4">
           <el-card shadow="never">
-            <el-form-item label="比赛名称" prop="contestTitle">
-              <el-input v-model="contestForm.contestTitle" maxlength="50" show-word-limit
+            <el-form-item label="比赛名称" prop="contest_title">
+              <el-input v-model="contestForm.contest_title" maxlength="50" show-word-limit
                         placeholder="输入比赛名称"></el-input>
             </el-form-item>
             <el-form-item label="图片url" prop="url">
@@ -21,26 +21,26 @@
         <!--左侧编辑内容-->
         <el-col :span="12" :offset="4">
           <el-card shadow="never" :body-style="{ padding: '0'}">
-            <mdEditor v-model="contestForm.contestText" :ishljs="true" style="min-height: 600px"/>
+            <mdEditor v-model="contestForm.contest_text" :ishljs="true" style="min-height: 600px"/>
           </el-card>
         </el-col>
         <!--右侧输入其他信息-->
         <el-col :span="4">
           <el-card shadow="never" style="min-height: 600px">
-            <el-form-item label="报名开始时间" prop="regStartTime">
-              <el-date-picker v-model="contestForm.regStartTime" type="datetime" placeholder="选择日期时间"
+            <el-form-item label="报名开始时间" prop="reg_start_time">
+              <el-date-picker v-model="reg_start_time" type="datetime" placeholder="选择日期时间"
                               default-time="08:00:00" value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
             </el-form-item>
-            <el-form-item label="报名结束时间" prop="regEndTime">
-              <el-date-picker v-model="contestForm.regEndTime" type="datetime" placeholder="选择日期时间"
+            <el-form-item label="报名结束时间" prop="reg_end_time">
+              <el-date-picker v-model="reg_end_time" type="datetime" placeholder="选择日期时间"
                               default-time="23:59:59" value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
             </el-form-item>
-            <el-form-item label="比赛开始时间" prop="startTime">
-              <el-date-picker v-model="contestForm.startTime" type="datetime" placeholder="选择日期时间"
+            <el-form-item label="比赛开始时间" prop="start_time">
+              <el-date-picker v-model="start_time" type="datetime" placeholder="选择日期时间"
                               default-time="08:00:00" value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
             </el-form-item>
-            <el-form-item label="比赛结束时间" prop="endTime">
-              <el-date-picker v-model="contestForm.endTime" type="datetime" placeholder="选择日期时间"
+            <el-form-item label="比赛结束时间" prop="end_time">
+              <el-date-picker v-model="end_time" type="datetime" placeholder="选择日期时间"
                               default-time="23:59:59" value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
             </el-form-item>
             <el-form-item style="float: right;padding-top: 60px">
@@ -97,17 +97,19 @@ export default {
     return {
       addOrUpdate: true,
       btnText: '立即发布',
+      reg_start_time: '',
+        reg_end_time: '',
+        start_time: '',
+        end_time: '',
       contestForm: {
-        contestTitle: '',
-        contestText: '## 请输入比赛内容\n',
+        contest_title: '',
+        contest_text: '## 请输入比赛内容\n',
         url: '',
-        promulgator: 0,
-        groupId: 0,
-        regStartTime: '',
-        regEndTime: '',
-        startTime: '',
-        endTime: '',
-        status: false
+        reg_start_time: '',
+        reg_end_time: '',
+        start_time: '',
+        end_time: '',
+        contest_id:''
       },
       rules: {
         contestTitle: [{required: true, message: '请输入比赛名称', trigger: 'blur'}],
@@ -130,21 +132,21 @@ export default {
       this.contestForm.promulgator = uid;
     }
     // 判断是否存在contestId，存在则是修改，否则是新增
-    if (this.$route.params.contestId) {
+    if (this.$route.params.contest_id) {
       this.addOrUpdate = false;
       this.btnText = '立即修改';
       document.title = '修改比赛';
-      getRequest("/contestForUpdate/" + this.$route.params.contestId).then((res) => {
-        const data = res.data.data;
+      postRequest("/get_contest_by_id" ,{oid:this.$route.params.contest_id}).then((res) => {
+        const data = res.data.contest;
         if (data) {
-          this.contestForm.contestTitle = data.contestTitle;
-          this.contestForm.contestId = this.$route.params.contestId;
-          this.contestForm.contestText = data.contestText;
+          this.contestForm.contest_id = this.$route.params.contest_id;
+          this.contestForm.contest_title = data.contest_title;
+          this.contestForm.contest_text = data.contest_text;
           this.contestForm.url = data.url;
-          this.contestForm.regStartTime = data.regStartTime;
-          this.contestForm.regEndTime = data.regEndTime;
-          this.contestForm.startTime = data.startTime;
-          this.contestForm.endTime = data.endTime;
+          this.reg_start_time = this.parseCustomStringToDate(data.reg_start_time);
+          this.reg_end_time = this.parseCustomStringToDate(data.reg_end_time);
+          this.start_time = this.parseCustomStringToDate(data.start_time);
+          this.end_time = this.parseCustomStringToDate(data.end_time);
         } else {
           this.$router.push("/404");
         }
@@ -154,25 +156,47 @@ export default {
     }
   },
   methods: {
+    formatDateToCustomString(date) {
+      if(date == ''){
+        return ''
+      }
+      if(typeof date === 'string'){
+        return date
+      }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+},parseCustomStringToDate(dateString) {
+  if(dateString==''){
+    return new Date(1970, 10 - 1, 1, 0, 0, 0);
+  }
+  const [datePart, timePart] = dateString.split(' ');
+  const [year, month, day] = datePart.split('-');
+  const [hours, minutes, seconds] = timePart.split(':');
+
+  return new Date(year, month - 1, day, hours, minutes, seconds);
+},
+
     // 提交
     submitForm() {
       this.$refs.contestForm.validate((valid) => {
         if (valid) {
           if (this.addOrUpdate) {
-            // 添加
-            postRequest("/addContest", this.contestForm).then(res => {
-              if (res.data.status) {
-                this.$message.success('发布成功，等待审核。');
-                this.$router.push("/manage");
-              } else {
-                this.$message.error('发布失败！');
-              }
-            })
           } else {
+            console.log(this.contestForm)
+            this.contestForm.reg_start_time = this.formatDateToCustomString(this.reg_start_time);
+          this.contestForm.reg_end_time = this.formatDateToCustomString(this.reg_end_time);
+          this.contestForm.start_time = this.formatDateToCustomString(this.start_time);
+          this.contestForm.end_time = this.formatDateToCustomString(this.end_time);
             // 修改
-            putRequest("/updateContest", this.contestForm).then(res => {
+            postRequest("/add_or_update_contest", this.contestForm).then(res => {
               if (res.data.status) {
-                this.$message.success('修改成功，等待审核。');
+                this.$message.success('修改成功!');
               } else {
                 this.$message.error('修改失败！');
               }
